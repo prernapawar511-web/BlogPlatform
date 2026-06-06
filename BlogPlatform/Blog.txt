@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blog Platform with Comments</title>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f4f4;
+            padding:20px;
+        }
+
+        .container{
+            max-width:800px;
+            margin:auto;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+        }
+
+        input, textarea{
+            width:100%;
+            padding:10px;
+            margin:5px 0;
+        }
+
+        button{
+            padding:10px 15px;
+            background:#007bff;
+            color:white;
+            border:none;
+            cursor:pointer;
+            margin-top:5px;
+        }
+
+        .post{
+            border:1px solid #ddd;
+            padding:10px;
+            margin-top:15px;
+            border-radius:5px;
+        }
+
+        .comment{
+            background:#f9f9f9;
+            padding:5px;
+            margin:5px 0;
+            border-left:3px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Blog Platform</h1>
+
+    <h2>User Registration</h2>
+    <input type="text" id="username" placeholder="Enter Username">
+    <button onclick="register()">Register</button>
+
+    <p id="currentUser"></p>
+
+    <hr>
+
+    <h2>Create Blog Post</h2>
+
+    <input type="text" id="title" placeholder="Post Title">
+
+    <textarea id="content" rows="5" placeholder="Write your blog..."></textarea>
+
+    <button onclick="createPost()">Publish Post</button>
+
+    <hr>
+
+    <h2>All Blog Posts</h2>
+
+    <div id="posts"></div>
+
+</div>
+
+<script>
+
+let currentUser = localStorage.getItem("currentUser") || "";
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
+
+updateUser();
+displayPosts();
+
+function register(){
+
+    const username =
+        document.getElementById("username").value;
+
+    if(username===""){
+        alert("Enter username");
+        return;
+    }
+
+    currentUser = username;
+
+    localStorage.setItem(
+        "currentUser",
+        currentUser
+    );
+
+    updateUser();
+
+    alert("User Registered Successfully");
+}
+
+function updateUser(){
+    document.getElementById("currentUser").innerHTML =
+        currentUser
+        ? "Logged in as: <b>"+currentUser+"</b>"
+        : "No user logged in";
+}
+
+function createPost(){
+
+    if(!currentUser){
+        alert("Register first");
+        return;
+    }
+
+    const title =
+        document.getElementById("title").value;
+
+    const content =
+        document.getElementById("content").value;
+
+    if(title==="" || content===""){
+        alert("Fill all fields");
+        return;
+    }
+
+    posts.push({
+        title:title,
+        content:content,
+        author:currentUser,
+        comments:[]
+    });
+
+    localStorage.setItem(
+        "posts",
+        JSON.stringify(posts)
+    );
+
+    document.getElementById("title").value="";
+    document.getElementById("content").value="";
+
+    displayPosts();
+}
+
+function addComment(index){
+
+    const commentText =
+        document.getElementById(
+            "comment-"+index
+        ).value;
+
+    if(commentText===""){
+        return;
+    }
+
+    posts[index].comments.push({
+        user:currentUser || "Guest",
+        text:commentText
+    });
+
+    localStorage.setItem(
+        "posts",
+        JSON.stringify(posts)
+    );
+
+    displayPosts();
+}
+
+function deletePost(index){
+
+    posts.splice(index,1);
+
+    localStorage.setItem(
+        "posts",
+        JSON.stringify(posts)
+    );
+
+    displayPosts();
+}
+
+function displayPosts(){
+
+    let html="";
+
+    posts.forEach((post,index)=>{
+
+        html += `
+        <div class="post">
+
+            <h3>${post.title}</h3>
+
+            <p>${post.content}</p>
+
+            <small>
+                Author: ${post.author}
+            </small>
+
+            <br><br>
+
+            <button onclick="deletePost(${index})">
+                Delete
+            </button>
+
+            <h4>Comments</h4>
+
+            ${post.comments.map(c => `
+                <div class="comment">
+                    <b>${c.user}:</b>
+                    ${c.text}
+                </div>
+            `).join("")}
+
+            <input
+                id="comment-${index}"
+                placeholder="Write a comment">
+
+            <button onclick="addComment(${index})">
+                Add Comment
+            </button>
+
+        </div>
+        `;
+    });
+
+    document.getElementById("posts").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
